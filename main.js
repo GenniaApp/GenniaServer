@@ -12,6 +12,7 @@ const crypto = require('crypto');
 const GameMap = require("./src/server/map")
 const Point = require("./src/server/point")
 const Player = require("./src/server/player")
+const { getIPAdress } = require("./util")
 
 const speedArr = [0.25, 0.5, 0.75, 1, 2, 3, 4]
 const forceStartOK = [1, 2, 2, 3, 3, 4, 5, 5, 6]
@@ -192,7 +193,7 @@ async function handleGame(io) {
 
 io = new Server(global.port)
 global.serverRunning = true
-console.log('Server established')
+console.log('Server established at', getIPAdress(), ':', global.port)
 // Listen for socket.io connections
 
 // io.on('connect', async (socket) => {
