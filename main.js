@@ -95,7 +95,9 @@ async function handleGame(io) {
     console.info(`Start game`)
     for (let [id, socket] of io.sockets.sockets) {
       let playerIndex = await getPlayerIndexBySocket(id)
-      socket.emit('game_started', global.players[playerIndex].color)
+      if (playerIndex !== -1) {
+        socket.emit('game_started', global.players[playerIndex].color)
+      }
     }
     global.gameStarted = true
 
@@ -115,18 +117,20 @@ async function handleGame(io) {
     for (let [id, socket] of io.sockets.sockets) {
       socket.on('attack', async (from, to, isHalf) => {
         let playerIndex = await getPlayerIndexBySocket(id)
-        let player = global.players[playerIndex]
-        if (player.operatedTurn < global.map.turn && global.map.commandable(player, from, to)) {
-          if (isHalf) {
-            global.map.moveHalfMovableUnit(player, from, to)
-          } else {
-            global.map.moveAllMovableUnit(player, from, to)
-          }
+        if (playerIndex !== -1) {
+          let player = global.players[playerIndex]
+          if (player.operatedTurn < global.map.turn && global.map.commandable(player, from, to)) {
+            if (isHalf) {
+              global.map.moveHalfMovableUnit(player, from, to)
+            } else {
+              global.map.moveAllMovableUnit(player, from, to)
+            }
 
-          global.players[playerIndex].operatedTurn = global.map.turn
-          socket.emit('attack_success', from, to)
-        } else {
-          socket.emit('attack_failure', from, to)
+            global.players[playerIndex].operatedTurn = global.map.turn
+            socket.emit('attack_success', from, to)
+          } else {
+            socket.emit('attack_failure', from, to)
+          }
         }
       })
     }
@@ -209,9 +213,11 @@ io.on('connection', async (socket) => {
       try {
         if (global.gameStarted) { // Allow to reconnect
           let playerIndex = await getPlayerIndex(playerId)
-          player = global.players[playerIndex]
-          global.players[playerIndex].socket_id = socket.id
-          io.local.emit('room_message', player.trans(), 're-joined the lobby.')
+          if (playerIndex !== -1) {
+            player = global.players[playerIndex]
+            global.players[playerIndex].socket_id = socket.id
+            io.local.emit('room_message', player.trans(), 're-joined the lobby.')
+          }
         }
       } catch (e) {
         socket.emit('error', 'An unknown error occurred: ' + e.message, e.stack)
