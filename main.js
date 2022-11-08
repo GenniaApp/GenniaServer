@@ -73,7 +73,7 @@ async function handleDisconnectInRoom(player, io) {
 }
 
 async function getPlayerIndex(playerId) {
-  for (let i = 0, c = 0; i < global.players.length; ++i) {
+  for (let i = 0; i < global.players.length; ++i) {
     if (global.players[i].id === playerId) {
       return i
     }
@@ -82,7 +82,7 @@ async function getPlayerIndex(playerId) {
 }
 
 async function getPlayerIndexBySocket(socketId) {
-  for (let i = 0, c = 0; i < global.players.length; ++i) {
+  for (let i = 0; i < global.players.length; ++i) {
     if (global.players[i].socket_id === socketId) {
       return i
     }
