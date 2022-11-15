@@ -51,12 +51,7 @@ async function handleInput(command) {
 
 async function handleDisconnectInGame(player, io) {
   io.local.emit('room_message', player.trans(), 'quit.')
-  global.players = global.players.filter(p => p != player)
-  if (global.players.length <= 1) {
-    global.gameStarted = false
-    clearInterval(global.gameLoop)
-    io.local.emit('game_ended', global.players[0].id)
-  }
+  global.players = global.players.filter(p => p.id != player.id)
 }
 
 async function handleDisconnectInRoom(player, io) {
@@ -171,6 +166,7 @@ async function handleGame(io) {
           io.local.emit('game_ended', alivePlayer.id)
           global.gameStarted = false
           global.forceStartNum = 0
+          console.log('Game ended');
           clearInterval(global.gameLoop)
         }
 
