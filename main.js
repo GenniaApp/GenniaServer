@@ -13,13 +13,17 @@ const GameMap = require("./src/server/map")
 const Point = require("./src/server/point")
 const Player = require("./src/server/player")
 const { getIPAdress } = require("./util")
+const app = require("./package.json")
 
 const speedArr = [0.25, 0.5, 0.75, 1, 2, 3, 4]
 const forceStartOK = [1, 2, 2, 3, 3, 4, 5, 5, 6]
 //                    0  1  2  3  4  5  6  7  8
 
 global.username = ''
-global.port = 9016
+global.serverConfig = {
+  name: 'Gennia Server',
+  port: 9016
+}
 global.serverRunning = false
 global.gameStarted = false
 global.map = undefined
@@ -198,9 +202,9 @@ async function handleGame(io) {
   }
 }
 
-io = new Server(global.port)
+io = new Server(global.serverConfig.port)
 global.serverRunning = true
-console.log('Server established at', getIPAdress(), ':', global.port)
+console.log('Server established at', getIPAdress(), ':', global.serverConfig.port)
 // Listen for socket.io connections
 
 // io.on('connect', async (socket) => {
@@ -209,6 +213,10 @@ console.log('Server established at', getIPAdress(), ':', global.port)
 io.on('connection', async (socket) => {
   if (global.players.length >= global.gameConfig.maxPlayers) socket.emit('reject_join', 'The room is full.')
   else {
+    socket.on('query_server_info', async () => {
+      socket.emit('server_info', global.serverConfig.name, `GenniaServer ${app.version}`)
+    })
+
     let player;
 
     socket.on('reconnect', async (playerId) => {
