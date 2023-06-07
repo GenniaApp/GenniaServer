@@ -1,3 +1,12 @@
+/*
+
+Gennia Map Constructor
+
+@Author: Reqwey(hi@reqwey.com)
+         Jackiexiao(707610215@qq.com)
+         GitHub Copilot
+
+*/
 const Block = require('./block');
 const Point = require('./point');
 
@@ -19,8 +28,8 @@ function getRandomInt(min, max) {
 
 class GameMap {
   constructor(width, height, mountain, city, swamp, kings) {
-    this.width = parseInt(kings.length * 2.7 + 10 * width);
-    this.height = parseInt(kings.length * 2.7 + 10 * height);
+    this.width = parseInt(kings.length * 5 + 6 * width);
+    this.height = parseInt(kings.length * 5 + 6 * height);
     if (mountain + city === 0) {
       this.mountain = this.city = 0
     } else {
@@ -35,48 +44,60 @@ class GameMap {
   }
 
   getFather(conn, curPoint) {
-    while (conn[curPoint] !== curPoint) curPoint = conn[curPoint]
+    while (conn[curPoint] !== curPoint) {
+      conn[curPoint] = conn[conn[curPoint]]
+      curPoint = conn[curPoint]
+    }
     return curPoint
   }
 
   isObstacle(block) { return block.type === 'Mountain' || block.type === 'City' }
   isPlain(block) { return block.type === 'Plain' }
-
+  
   checkConnection(obstacleCount) {
-    let conn = new Array(this.width * this.height)
-    let size = new Array(this.width * this.height)
-    for (let i = 0; i < conn.length; i++) { conn[i] = i, size[i] = 1 }
+    const conn = new Array(this.width * this.height).fill().map((_, i) => i);
+    const size = new Array(this.width * this.height).fill(1);
+    let connected = false;
+  
     for (let i = 0; i < this.width; i++) {
       for (let j = 0; j < this.height; j++) {
         if (!this.isObstacle(this.map[i][j])) {
-          let curPoint = i * this.height + j;
-          (new Array(new Point(-1, 0), new Point(0, -1))).forEach((dir) => {
-            let tx = i + dir.x, ty = j + dir.y;
-            if (this.withinMap({x: tx, y: ty}) && !this.isObstacle(this.map[tx][ty])) {
-              let lastPoint = tx * this.height + ty;
-              let curFather = this.getFather(conn, curPoint);
-              let lastFather = this.getFather(conn, lastPoint);
-              if (size[lastFather] > size[curFather]) {
-                conn[curFather] = lastFather;
-                size[lastFather] += size[curFather];
-              } else {
-                conn[lastFather] = curFather;
-                size[curFather] += size[lastFather];
+          const curPoint = i * this.height + j;
+          const neighbors = [
+            { x: i - 1, y: j },
+            { x: i, y: j - 1 }
+          ];
+          for (const neighbor of neighbors) {
+            const { x, y } = neighbor;
+            if (this.withinMap({ x, y }) && !this.isObstacle(this.map[x][y])) {
+              const lastPoint = x * this.height + y;
+              const curFather = this.getFather(conn, curPoint);
+              const lastFather = this.getFather(conn, lastPoint);
+              if (curFather !== lastFather){
+                if (size[lastFather] > size[curFather]) {
+                  conn[curFather] = lastFather;
+                  size[lastFather] += size[curFather];
+                } else {
+                  conn[lastFather] = curFather;
+                  size[curFather] += size[lastFather];
+                }
               }
             }
-          })
+          }
         }
-      }
-    }
-    for (let i = 0; i < this.width; i++) {
-      for (let j = 0; j < this.height; j++) {
         if (size[this.getFather(conn, i * this.height + j)] >= this.width * this.height - obstacleCount) {
-          return true
+          connected = true;
+          break;
         }
       }
+      if (connected) {
+        break;
+      }
     }
-    return false
+  
+    return connected;
   }
+  
 
   generate() {
     console.log("Width:", this.width, "Height:", this.height)
@@ -108,6 +129,7 @@ class GameMap {
         }
       }
     }
+    console.log('Kings generated successfully');
     // Generate the mountain
     for (let i = 1; i <= this.mountain; ++i) {
       let generated = false
@@ -127,6 +149,7 @@ class GameMap {
       }
       if (!generated) { this.mountain = i - 1; console.log("Mountain Interrupted", i); break }
     }
+    console.log('Mountains generated successfully');
     // Generate the city
     for (let i = 1; i <= this.city; ++i) {
       let generated = false
@@ -147,6 +170,7 @@ class GameMap {
       }
       if (!generated) { this.city = i - 1; console.log("City Interrupted", i); break }
     }
+    console.log('Cities generated successfully');
     // Generate the swamp.
     for (let i = 1, x, y; i <= this.swamp; ++i) {
       while (true) {
@@ -156,6 +180,7 @@ class GameMap {
       }
       this.map[x][y].type = 'Swamp'
     }
+    console.log('Swamps generated successfully');
     let kings = this.kings
     return new Promise(function (resolve, reject) {
       console.log('Map generated successfully')
@@ -195,7 +220,7 @@ class GameMap {
 
   transferBlock(point, player) {
     this.map[point.x][point.y].player = player
-    this.map[point.x][point.y].unit = Math.floor(this.map[point.x][point.y].unit / 2)
+    this.map[point.x][point.y].unit = Math.ceil(this.map[point.x][point.y].unit / 2)
   }
 
   withinMap(point) {
