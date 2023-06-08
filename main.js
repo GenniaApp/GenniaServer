@@ -294,49 +294,58 @@ io.on("connection", async (socket) => {
     });
 
     socket.on("set_username", async (username) => {
-      username = xss(username);
-      if (!username.length) {
-        socket.emit("reject_join", "Username is invalid");
-        return;
-      }
-      if (global.gameStarted) {
-        socket.emit("reject_join", "Game is already started");
-        return;
-      }
-      // This socket will be first called when the player connects the server
-      let playerId = crypto
-        .randomBytes(Math.ceil(10 / 2))
-        .toString("hex")
-        .slice(0, 10);
-      console.log("Player:", username, "playerId:", playerId);
-      socket.emit("set_player_id", playerId);
+      try {
+        username = xss(username);
+        if (!username.length) {
+          socket.emit("reject_join", "Username is invalid");
+          return;
+        }
+        if (global.gameStarted) {
+          socket.emit("reject_join", "Game is already started");
+          return;
+        }
+        // This socket will be first called when the player connects the server
+        let playerId = crypto
+          .randomBytes(Math.ceil(10 / 2))
+          .toString("hex")
+          .slice(0, 10);
+        console.log("Player:", username, "playerId:", playerId);
+        socket.emit("set_player_id", playerId);
 
-      player = new Player(playerId, socket.id, username, global.players.length);
+        player = new Player(
+          playerId,
+          socket.id,
+          username,
+          global.players.length
+        );
 
-      global.players.push(player);
-      let playerIndex = global.players.length - 1;
+        global.players.push(player);
+        let playerIndex = global.players.length - 1;
 
-      io.local.emit("room_message", player.trans(), "joined the lobby.");
-      io.local.emit(
-        "players_changed",
-        global.players.map((player) => player.trans())
-      );
+        io.local.emit("room_message", player.trans(), "joined the lobby.");
+        io.local.emit(
+          "players_changed",
+          global.players.map((player) => player.trans())
+        );
 
-      if (global.players.length === 1) {
-        console.log(global.players[playerIndex]);
-        global.players[playerIndex].setRoomHost(true);
-      }
-      global.players[playerIndex].username = username;
-      io.local.emit(
-        "players_changed",
-        global.players.map((player) => player.trans())
-      );
+        if (global.players.length === 1) {
+          console.log(global.players[playerIndex]);
+          global.players[playerIndex].setRoomHost(true);
+        }
+        global.players[playerIndex].username = username;
+        io.local.emit(
+          "players_changed",
+          global.players.map((player) => player.trans())
+        );
 
-      // Only emit to this player so it will get the latest status
-      socket.emit("force_start_changed", global.forceStartNum);
+        // Only emit to this player so it will get the latest status
+        socket.emit("force_start_changed", global.forceStartNum);
 
-      if (global.players.length >= global.gameConfig.maxPlayers) {
-        await handleGame(io);
+        if (global.players.length >= global.gameConfig.maxPlayers) {
+          await handleGame(io);
+        }
+      } catch (e) {
+        console.log(e.message);
       }
     });
 
@@ -345,150 +354,182 @@ io.on("connection", async (socket) => {
     });
 
     socket.on("change_host", async (userId) => {
-      if (player.isRoomHost) {
-        let currentHost = await getPlayerIndex(player.id);
-        let newHost = await getPlayerIndex(userId);
-        if (newHost !== -1) {
-          global.players[currentHost].setRoomHost(false);
-          global.players[newHost].setRoomHost(true);
-          io.local.emit(
-            "players_changed",
-            global.players.map((player) => player.trans())
-          );
+      try {
+        if (player.isRoomHost) {
+          let currentHost = await getPlayerIndex(player.id);
+          let newHost = await getPlayerIndex(userId);
+          if (newHost !== -1) {
+            global.players[currentHost].setRoomHost(false);
+            global.players[newHost].setRoomHost(true);
+            io.local.emit(
+              "players_changed",
+              global.players.map((player) => player.trans())
+            );
+          }
         }
+      } catch (e) {
+        console.log(e.message);
       }
     });
 
     socket.on("change_game_speed", async (value) => {
-      if (player.isRoomHost) {
-        console.log("Changing game speed to " + speedArr[value] + "x");
-        global.gameConfig.gameSpeed = value;
-        io.local.emit("game_config_changed", global.gameConfig);
-        io.local.emit(
-          "room_message",
-          player.trans(),
-          `changed the game speed to ${speedArr[value]}x.`
-        );
-      } else {
-        socket.emit(
-          "error",
-          "Changement was failed",
-          "You are not the game host."
-        );
+      try {
+        if (player.isRoomHost) {
+          console.log("Changing game speed to " + speedArr[value] + "x");
+          global.gameConfig.gameSpeed = value;
+          io.local.emit("game_config_changed", global.gameConfig);
+          io.local.emit(
+            "room_message",
+            player.trans(),
+            `changed the game speed to ${speedArr[value]}x.`
+          );
+        } else {
+          socket.emit(
+            "error",
+            "Changement was failed",
+            "You are not the game host."
+          );
+        }
+      } catch (e) {
+        console.log(e.message);
       }
     });
 
     socket.on("change_map_width", async (value) => {
-      if (player.isRoomHost) {
-        console.log("Changing map width to" + value);
-        global.gameConfig.mapWidth = value;
-        io.local.emit("game_config_changed", global.gameConfig);
-        io.local.emit(
-          "room_message",
-          player.trans(),
-          `changed the map width to ${value}.`
-        );
-      } else {
-        socket.emit(
-          "error",
-          "Changement was failed",
-          "You are not the game host."
-        );
+      try {
+        if (player.isRoomHost) {
+          console.log("Changing map width to" + value);
+          global.gameConfig.mapWidth = value;
+          io.local.emit("game_config_changed", global.gameConfig);
+          io.local.emit(
+            "room_message",
+            player.trans(),
+            `changed the map width to ${value}.`
+          );
+        } else {
+          socket.emit(
+            "error",
+            "Changement was failed",
+            "You are not the game host."
+          );
+        }
+      } catch (e) {
+        console.log(e.message);
       }
     });
 
     socket.on("change_map_height", async (value) => {
-      if (player.isRoomHost) {
-        console.log("Changing map height to" + value);
-        global.gameConfig.mapHeight = value;
-        io.local.emit("game_config_changed", global.gameConfig);
-        io.local.emit(
-          "room_message",
-          player.trans(),
-          `changed the map height to ${value}.`
-        );
-      } else {
-        socket.emit(
-          "error",
-          "Changement was failed",
-          "You are not the game host."
-        );
+      try {
+        if (player.isRoomHost) {
+          console.log("Changing map height to" + value);
+          global.gameConfig.mapHeight = value;
+          io.local.emit("game_config_changed", global.gameConfig);
+          io.local.emit(
+            "room_message",
+            player.trans(),
+            `changed the map height to ${value}.`
+          );
+        } else {
+          socket.emit(
+            "error",
+            "Changement was failed",
+            "You are not the game host."
+          );
+        }
+      } catch (e) {
+        console.log(e.message);
       }
     });
 
     socket.on("change_mountain", async (value) => {
-      if (player.isRoomHost) {
-        console.log("Changing mountain to" + value);
-        global.gameConfig.mountain = value;
-        io.local.emit("game_config_changed", global.gameConfig);
-        io.local.emit(
-          "room_message",
-          player.trans(),
-          `changed the mountain to ${value}.`
-        );
-      } else {
-        socket.emit(
-          "error",
-          "Changement was failed",
-          "You are not the game host."
-        );
+      try {
+        if (player.isRoomHost) {
+          console.log("Changing mountain to" + value);
+          global.gameConfig.mountain = value;
+          io.local.emit("game_config_changed", global.gameConfig);
+          io.local.emit(
+            "room_message",
+            player.trans(),
+            `changed the mountain to ${value}.`
+          );
+        } else {
+          socket.emit(
+            "error",
+            "Changement was failed",
+            "You are not the game host."
+          );
+        }
+      } catch (e) {
+        console.log(e.message);
       }
     });
 
     socket.on("change_city", async (value) => {
-      if (player.isRoomHost) {
-        console.log("Changing city to" + value);
-        global.gameConfig.city = value;
-        io.local.emit("game_config_changed", global.gameConfig);
-        io.local.emit(
-          "room_message",
-          player.trans(),
-          `changed the city to ${value}.`
-        );
-      } else {
-        socket.emit(
-          "error",
-          "Changement was failed",
-          "You are not the game host."
-        );
+      try {
+        if (player.isRoomHost) {
+          console.log("Changing city to" + value);
+          global.gameConfig.city = value;
+          io.local.emit("game_config_changed", global.gameConfig);
+          io.local.emit(
+            "room_message",
+            player.trans(),
+            `changed the city to ${value}.`
+          );
+        } else {
+          socket.emit(
+            "error",
+            "Changement was failed",
+            "You are not the game host."
+          );
+        }
+      } catch (e) {
+        console.log(e.message);
       }
     });
 
     socket.on("change_swamp", async (value) => {
-      if (player.isRoomHost) {
-        console.log("Changing swamp to" + value);
-        global.gameConfig.swamp = value;
-        io.local.emit("game_config_changed", global.gameConfig);
-        io.local.emit(
-          "room_message",
-          player.trans(),
-          `changed the swamp to ${value}.`
-        );
-      } else {
-        socket.emit(
-          "error",
-          "Changement was failed",
-          "You are not the game host."
-        );
+      try {
+        if (player.isRoomHost) {
+          console.log("Changing swamp to" + value);
+          global.gameConfig.swamp = value;
+          io.local.emit("game_config_changed", global.gameConfig);
+          io.local.emit(
+            "room_message",
+            player.trans(),
+            `changed the swamp to ${value}.`
+          );
+        } else {
+          socket.emit(
+            "error",
+            "Changement was failed",
+            "You are not the game host."
+          );
+        }
+      } catch (e) {
+        console.log(e.message);
       }
     });
 
     socket.on("change_max_player_num", async (value) => {
-      if (player.isRoomHost) {
-        console.log("Changing max players to" + value);
-        global.gameConfig.maxPlayers = value;
-        io.local.emit("game_config_changed", global.gameConfig);
-        io.local.emit(
-          "room_message",
-          player.trans(),
-          `changed the max player num to ${value}.`
-        );
-      } else {
-        socket.emit(
-          "error",
-          "Changement was failed",
-          "You are not the game host."
-        );
+      try {
+        if (player.isRoomHost) {
+          console.log("Changing max players to" + value);
+          global.gameConfig.maxPlayers = value;
+          io.local.emit("game_config_changed", global.gameConfig);
+          io.local.emit(
+            "room_message",
+            player.trans(),
+            `changed the max player num to ${value}.`
+          );
+        } else {
+          socket.emit(
+            "error",
+            "Changement was failed",
+            "You are not the game host."
+          );
+        }
+      } catch (e) {
+        console.log(e.message);
       }
     });
 
@@ -502,27 +543,35 @@ io.on("connection", async (socket) => {
     });
 
     socket.on("leave_game", async () => {
-      socket.disconnect();
-      await handleDisconnectInGame(player, io);
+      try {
+        socket.disconnect();
+        await handleDisconnectInGame(player, io);
+      } catch (e) {
+        console.log(e.message);
+      }
     });
 
     socket.on("force_start", async () => {
-      let playerIndex = await getPlayerIndex(player.id);
-      if (global.players[playerIndex].forceStart === true) {
-        global.players[playerIndex].forceStart = false;
-        --global.forceStartNum;
-      } else {
-        global.players[playerIndex].forceStart = true;
-        ++global.forceStartNum;
-      }
-      io.local.emit(
-        "players_changed",
-        global.players.map((player) => player.trans())
-      );
-      io.local.emit("force_start_changed", global.forceStartNum);
+      try {
+        let playerIndex = await getPlayerIndex(player.id);
+        if (global.players[playerIndex].forceStart === true) {
+          global.players[playerIndex].forceStart = false;
+          --global.forceStartNum;
+        } else {
+          global.players[playerIndex].forceStart = true;
+          ++global.forceStartNum;
+        }
+        io.local.emit(
+          "players_changed",
+          global.players.map((player) => player.trans())
+        );
+        io.local.emit("force_start_changed", global.forceStartNum);
 
-      if (global.forceStartNum >= forceStartOK[global.players.length]) {
-        await handleGame(io);
+        if (global.forceStartNum >= forceStartOK[global.players.length]) {
+          await handleGame(io);
+        }
+      } catch (e) {
+        console.log(e.message);
       }
     });
   }
