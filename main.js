@@ -1,33 +1,38 @@
 /*
- * 
+ *
  * Gennia server side
  * Copyright (c) 2022 Reqwey Lin (https://github.com/Reqwey)
- * 
+ *
  */
 
 // Modules to control application life and create native browser window
-const path = require('path')
-const { Server } = require("socket.io")
-const crypto = require('crypto');
-const GameMap = require("./src/server/map")
-const Point = require("./src/server/point")
-const Player = require("./src/server/player")
-const { getIPAdress } = require("./util")
-const app = require("./package.json")
+const path = require("path");
+const { Server } = require("socket.io");
+const crypto = require("crypto");
+const xss = require("xss");
+const GameMap = require("./src/server/map");
+const Point = require("./src/server/point");
+const Player = require("./src/server/player");
+const { getIPAdress } = require("./util");
+const express = require("express");
+const app = express();
+const genniaserver = require("./package.json");
+const http = require("http");
+const server = http.createServer(app);
 
-const speedArr = [0.25, 0.5, 0.75, 1, 2, 3, 4]
-const forceStartOK = [1, 2, 2, 3, 3, 4, 5, 5, 6]
+const speedArr = [0.25, 0.5, 0.75, 1, 2, 3, 4];
+const forceStartOK = [1, 2, 2, 3, 3, 4, 5, 5, 6];
 //                    0  1  2  3  4  5  6  7  8
 
-global.username = ''
+global.username = "";
 global.serverConfig = {
-  name: 'Gennia Server',
-  port: 9016
-}
-global.serverRunning = false
-global.gameStarted = false
-global.map = undefined
-global.gameLoop = undefined
+  name: "Gennia Server",
+  port: 8080,
+};
+global.serverRunning = false;
+global.gameStarted = false;
+global.map = undefined;
+global.gameLoop = undefined;
 global.gameConfig = {
   maxPlayers: 8,
   gameSpeed: 3,
@@ -35,11 +40,23 @@ global.gameConfig = {
   mapHeight: 0.75,
   mountain: 0.5,
   city: 0.5,
-  swamp: 0
-}
-global.players = new Array()
-global.generals = new Array()
-global.forceStartNum = 0
+  swamp: 0,
+};
+global.players = new Array();
+global.generals = new Array();
+global.forceStartNum = 0;
+
+const io = new Server(server);
+
+app.use(express.static(__dirname + "/src/frontend/"));
+
+server.listen(global.serverConfig.port, () => {
+  global.serverRunning = true;
+  console.log(
+    "Server established at",
+    "http://" + getIPAdress() + ":" + global.serverConfig.port
+  );
+});
 
 async function userSet(username) {
   // console.log('join', this)
@@ -54,57 +71,68 @@ async function handleInput(command) {
 }
 
 async function handleDisconnectInGame(player, io) {
-  io.local.emit('room_message', player.trans(), 'quit.')
-  global.players = global.players.filter(p => p.id != player.id)
+  try {
+    io.local.emit("room_message", player.trans(), "quit.");
+    global.players = global.players.filter((p) => p.id != player.id);
+  } catch (e) {
+    console.log(e.message);
+  }
 }
 
 async function handleDisconnectInRoom(player, io) {
-  io.local.emit('room_message', player.trans(), 'quit.')
-  let newPlayers = []
-  global.forceStartNum = 0
-  for (let i = 0, c = 0; i < global.players.length; ++i) {
-    if (global.players[i].id !== player.id) {
-      global.players[i].color = c++
-      newPlayers.push(global.players[i])
-      if (global.players[i].forceStart) {
-        ++global.forceStartNum
+  try {
+    io.local.emit("room_message", player.trans(), "quit.");
+    let newPlayers = [];
+    global.forceStartNum = 0;
+    for (let i = 0, c = 0; i < global.players.length; ++i) {
+      if (global.players[i].id !== player.id) {
+        global.players[i].color = c++;
+        newPlayers.push(global.players[i]);
+        if (global.players[i].forceStart) {
+          ++global.forceStartNum;
+        }
       }
     }
+    io.local.emit("force_start_changed", global.forceStartNum);
+    global.players = newPlayers;
+    if (global.players.length > 0) global.players[0].setRoomHost(true);
+    io.local.emit(
+      "players_changed",
+      global.players.map((player) => player.trans())
+    );
+  } catch (e) {
+    console.log(e.message);
   }
-  io.local.emit('force_start_changed', global.forceStartNum)
-  global.players = newPlayers
-  if (global.players.length > 0) global.players[0].setRoomHost(true)
-  io.local.emit('players_changed', global.players.map(player => player.trans()))
 }
 
 async function getPlayerIndex(playerId) {
   for (let i = 0; i < global.players.length; ++i) {
     if (global.players[i].id === playerId) {
-      return i
+      return i;
     }
   }
-  return -1
+  return -1;
 }
 
 async function getPlayerIndexBySocket(socketId) {
   for (let i = 0; i < global.players.length; ++i) {
     if (global.players[i].socket_id === socketId) {
-      return i
+      return i;
     }
   }
-  return -1
+  return -1;
 }
 
 async function handleGame(io) {
   if (global.gameStarted === false) {
-    console.info(`Start game`)
+    console.info(`Start game`);
     for (let [id, socket] of io.sockets.sockets) {
-      let playerIndex = await getPlayerIndexBySocket(id)
+      let playerIndex = await getPlayerIndexBySocket(id);
       if (playerIndex !== -1) {
-        socket.emit('game_started', global.players[playerIndex].color)
+        socket.emit("game_started", global.players[playerIndex].color);
       }
     }
-    global.gameStarted = true
+    global.gameStarted = true;
 
     global.map = new GameMap(
       global.gameConfig.mapWidth,
@@ -113,281 +141,389 @@ async function handleGame(io) {
       global.gameConfig.city,
       global.gameConfig.swamp,
       global.players
-    )
-    global.players = await global.map.generate()
-    global.mapGenerated = true
+    );
+    global.players = await global.map.generate();
+    global.mapGenerated = true;
 
-    io.local.emit('init_game_map', global.map.width, global.map.height)
+    io.local.emit("init_game_map", global.map.width, global.map.height);
 
     for (let [id, socket] of io.sockets.sockets) {
-      socket.on('attack', async (from, to, isHalf) => {
-        let playerIndex = await getPlayerIndexBySocket(id)
+      socket.on("attack", async (from, to, isHalf) => {
+        let playerIndex = await getPlayerIndexBySocket(id);
         if (playerIndex !== -1) {
-          let player = global.players[playerIndex]
-          if (player.operatedTurn < global.map.turn && global.map.commandable(player, from, to)) {
+          let player = global.players[playerIndex];
+          if (
+            player.operatedTurn < global.map.turn &&
+            global.map.commandable(player, from, to)
+          ) {
             if (isHalf) {
-              global.map.moveHalfMovableUnit(player, from, to)
+              global.map.moveHalfMovableUnit(player, from, to);
             } else {
-              global.map.moveAllMovableUnit(player, from, to)
+              global.map.moveAllMovableUnit(player, from, to);
             }
 
-            global.players[playerIndex].operatedTurn = global.map.turn
-            socket.emit('attack_success', from, to)
+            global.players[playerIndex].operatedTurn = global.map.turn;
+            socket.emit("attack_success", from, to);
           } else {
-            socket.emit('attack_failure', from, to)
+            socket.emit("attack_failure", from, to);
           }
         }
-      })
+      });
     }
 
-    let updTime = 500 / speedArr[global.gameConfig.gameSpeed]
+    let updTime = 500 / speedArr[global.gameConfig.gameSpeed];
     global.gameLoop = setInterval(async () => {
       try {
-
         global.players.forEach(async (player) => {
-          let block = global.map.getBlock(player.king)
+          let block = global.map.getBlock(player.king);
 
-          let blockPlayerIndex = await getPlayerIndex(block.player.id)
+          let blockPlayerIndex = await getPlayerIndex(block.player.id);
           if (blockPlayerIndex !== -1) {
             if (block.player !== player && player.isDead === false) {
-              console.log(block.player.username, 'captured', player.username)
-              io.local.emit('captured', block.player.trans(), player.trans())
-              io.sockets.sockets.get(player.socket_id).emit('game_over', block.player.trans())
-              player.isDead = true
-              global.map.getBlock(player.king).kingBeDominated()
-              player.land.forEach(block => {
-                global.map.transferBlock(block, global.players[blockPlayerIndex])
-                global.players[blockPlayerIndex].winLand(block)
-              })
-              player.land.length = 0
+              console.log(block.player.username, "captured", player.username);
+              io.local.emit("captured", block.player.trans(), player.trans());
+              io.sockets.sockets
+                .get(player.socket_id)
+                .emit("game_over", block.player.trans());
+              player.isDead = true;
+              global.map.getBlock(player.king).kingBeDominated();
+              player.land.forEach((block) => {
+                global.map.transferBlock(
+                  block,
+                  global.players[blockPlayerIndex]
+                );
+                global.players[blockPlayerIndex].winLand(block);
+              });
+              player.land.length = 0;
             }
           }
-        })
-        let alivePlayer = null, countAlive = 0
+        });
+        let alivePlayer = null,
+          countAlive = 0;
         for (let a of global.players)
-          if (!a.isDead) alivePlayer = a, ++countAlive
+          if (!a.isDead) (alivePlayer = a), ++countAlive;
         if (countAlive === 1) {
-          io.local.emit('game_ended', alivePlayer.id)
-          global.gameStarted = false
-          global.forceStartNum = 0
-          console.log('Game ended');
-          clearInterval(global.gameLoop)
+          io.local.emit("game_ended", alivePlayer.id);
+          global.gameStarted = false;
+          global.forceStartNum = 0;
+          console.log("Game ended");
+          clearInterval(global.gameLoop);
         }
 
-        let leaderBoard = global.players.map(player => {
-          let data = global.map.getTotal(player)
-          return {
-            color: player.color,
-            username: player.username,
-            army: data.army,
-            land: data.land
-          }
-        }).sort((a, b) => { return b.army - a.army || b.land - a.land })
+        let leaderBoard = global.players
+          .map((player) => {
+            let data = global.map.getTotal(player);
+            return {
+              color: player.color,
+              username: player.username,
+              army: data.army,
+              land: data.land,
+            };
+          })
+          .sort((a, b) => {
+            return b.army - a.army || b.land - a.land;
+          });
 
         for (let [id, socket] of io.sockets.sockets) {
-          let playerIndex = await getPlayerIndexBySocket(id)
+          let playerIndex = await getPlayerIndexBySocket(id);
           if (playerIndex !== -1) {
-            let view = await global.map.getViewPlayer(global.players[playerIndex])
-            view = JSON.stringify(view)
-            socket.emit('game_update', view, global.map.width, global.map.height, global.turn, leaderBoard)
+            let view = await global.map.getViewPlayer(
+              global.players[playerIndex]
+            );
+            view = JSON.stringify(view);
+            socket.emit(
+              "game_update",
+              view,
+              global.map.width,
+              global.map.height,
+              global.turn,
+              leaderBoard
+            );
           }
         }
-        global.map.updateTurn()
-        global.map.updateUnit()
-      } catch (e) { console.log(e) }
-    }, updTime)
+        global.map.updateTurn();
+        global.map.updateUnit();
+      } catch (e) {
+        console.log(e);
+      }
+    }, updTime);
   }
 }
 
-io = new Server(global.serverConfig.port)
-global.serverRunning = true
-console.log('Server established at', getIPAdress(), ':', global.serverConfig.port)
 // Listen for socket.io connections
 
 // io.on('connect', async (socket) => {
 //   console.log(io.sockets.sockets)
 // })
-io.on('connection', async (socket) => {
-  if (global.players.length >= global.gameConfig.maxPlayers) socket.emit('reject_join', 'The room is full.')
+io.on("connection", async (socket) => {
+  if (global.players.length >= global.gameConfig.maxPlayers)
+    socket.emit("reject_join", "The room is full.");
   else {
-    socket.on('query_server_info', async () => {
-      socket.emit('server_info', global.serverConfig.name, `GenniaServer ${app.version}`)
-    })
+    socket.on("query_server_info", async () => {
+      socket.emit(
+        "server_info",
+        global.serverConfig.name,
+        `GenniaServer ${genniaserver.version}`
+      );
+    });
 
     let player;
 
-    socket.on('reconnect', async (playerId) => {
+    socket.on("reconnect", async (playerId) => {
       try {
-        if (global.gameStarted) { // Allow to reconnect
-          let playerIndex = await getPlayerIndex(playerId)
+        if (global.gameStarted) {
+          // Allow to reconnect
+          let playerIndex = await getPlayerIndex(playerId);
           if (playerIndex !== -1) {
-            player = global.players[playerIndex]
-            global.players[playerIndex].socket_id = socket.id
-            io.local.emit('room_message', player.trans(), 're-joined the lobby.')
+            player = global.players[playerIndex];
+            global.players[playerIndex].socket_id = socket.id;
+            io.local.emit(
+              "room_message",
+              player.trans(),
+              "re-joined the lobby."
+            );
           }
         }
       } catch (e) {
-        socket.emit('error', 'An unknown error occurred: ' + e.message, e.stack)
+        socket.emit(
+          "error",
+          "An unknown error occurred: " + e.message,
+          e.stack
+        );
       }
-    })
+    });
 
-    socket.on('set_username', async (username) => {
+    socket.on("set_username", async (username) => {
+      username = xss(username);
+      if (!username.length) {
+        socket.emit("reject_join", "Username is invalid");
+        return;
+      }
       if (global.gameStarted) {
-        socket.emit('reject_join', 'Game is already started')
+        socket.emit("reject_join", "Game is already started");
         return;
       }
       // This socket will be first called when the player connects the server
-      let playerId = crypto.randomBytes(Math.ceil(10 / 2)).toString('hex').slice(0, 10)
-      console.log("Player:", username, "playerId:", playerId)
-      socket.emit('set_player_id', playerId)
+      let playerId = crypto
+        .randomBytes(Math.ceil(10 / 2))
+        .toString("hex")
+        .slice(0, 10);
+      console.log("Player:", username, "playerId:", playerId);
+      socket.emit("set_player_id", playerId);
 
-      player = new Player(playerId, socket.id, username, global.players.length)
+      player = new Player(playerId, socket.id, username, global.players.length);
 
-      global.players.push(player)
-      let playerIndex = global.players.length - 1
+      global.players.push(player);
+      let playerIndex = global.players.length - 1;
 
-      io.local.emit('room_message', player.trans(), 'joined the lobby.')
-      io.local.emit('players_changed', global.players.map(player => player.trans()))
+      io.local.emit("room_message", player.trans(), "joined the lobby.");
+      io.local.emit(
+        "players_changed",
+        global.players.map((player) => player.trans())
+      );
 
       if (global.players.length === 1) {
-        console.log(global.players[playerIndex])
-        global.players[playerIndex].setRoomHost(true)
+        console.log(global.players[playerIndex]);
+        global.players[playerIndex].setRoomHost(true);
       }
-      global.players[playerIndex].username = username
-      io.local.emit('players_changed', global.players.map(player => player.trans()))
+      global.players[playerIndex].username = username;
+      io.local.emit(
+        "players_changed",
+        global.players.map((player) => player.trans())
+      );
 
       // Only emit to this player so it will get the latest status
-      socket.emit('force_start_changed', global.forceStartNum)
+      socket.emit("force_start_changed", global.forceStartNum);
 
       if (global.players.length >= global.gameConfig.maxPlayers) {
-        await handleGame(io)
+        await handleGame(io);
       }
-    })
+    });
 
-    socket.on('get_game_settings', async () => {
-      socket.emit('push_game_settings', global.gameConfig)
-    })
+    socket.on("get_game_settings", async () => {
+      socket.emit("push_game_settings", global.gameConfig);
+    });
 
-    socket.on('change_host', async (userId) => {
+    socket.on("change_host", async (userId) => {
       if (player.isRoomHost) {
-        let currentHost = await getPlayerIndex(player.id)
-        let newHost = await getPlayerIndex(userId)
+        let currentHost = await getPlayerIndex(player.id);
+        let newHost = await getPlayerIndex(userId);
         if (newHost !== -1) {
-          global.players[currentHost].setRoomHost(false)
-          global.players[newHost].setRoomHost(true)
-          io.local.emit('players_changed', global.players.map(player => player.trans()))
+          global.players[currentHost].setRoomHost(false);
+          global.players[newHost].setRoomHost(true);
+          io.local.emit(
+            "players_changed",
+            global.players.map((player) => player.trans())
+          );
         }
       }
-    })
+    });
 
-    socket.on('change_game_speed', async (value) => {
+    socket.on("change_game_speed", async (value) => {
       if (player.isRoomHost) {
-        console.log('Changing game speed to ' + speedArr[value] + 'x')
-        global.gameConfig.gameSpeed = value
-        io.local.emit('game_config_changed', global.gameConfig)
-        io.local.emit('room_message', player.trans(), `changed the game speed to ${speedArr[value]}x.`)
+        console.log("Changing game speed to " + speedArr[value] + "x");
+        global.gameConfig.gameSpeed = value;
+        io.local.emit("game_config_changed", global.gameConfig);
+        io.local.emit(
+          "room_message",
+          player.trans(),
+          `changed the game speed to ${speedArr[value]}x.`
+        );
       } else {
-        socket.emit('error', 'Changement was failed', 'You are not the game host.')
+        socket.emit(
+          "error",
+          "Changement was failed",
+          "You are not the game host."
+        );
       }
-    })
+    });
 
-    socket.on('change_map_width', async (value) => {
+    socket.on("change_map_width", async (value) => {
       if (player.isRoomHost) {
-        console.log('Changing map width to' + value)
-        global.gameConfig.mapWidth = value
-        io.local.emit('game_config_changed', global.gameConfig)
-        io.local.emit('room_message', player.trans(), `changed the map width to ${value}.`)
+        console.log("Changing map width to" + value);
+        global.gameConfig.mapWidth = value;
+        io.local.emit("game_config_changed", global.gameConfig);
+        io.local.emit(
+          "room_message",
+          player.trans(),
+          `changed the map width to ${value}.`
+        );
       } else {
-        socket.emit('error', 'Changement was failed', 'You are not the game host.')
+        socket.emit(
+          "error",
+          "Changement was failed",
+          "You are not the game host."
+        );
       }
-    })
+    });
 
-    socket.on('change_map_height', async (value) => {
+    socket.on("change_map_height", async (value) => {
       if (player.isRoomHost) {
-        console.log('Changing map height to' + value)
-        global.gameConfig.mapHeight = value
-        io.local.emit('game_config_changed', global.gameConfig)
-        io.local.emit('room_message', player.trans(), `changed the map height to ${value}.`)
+        console.log("Changing map height to" + value);
+        global.gameConfig.mapHeight = value;
+        io.local.emit("game_config_changed", global.gameConfig);
+        io.local.emit(
+          "room_message",
+          player.trans(),
+          `changed the map height to ${value}.`
+        );
       } else {
-        socket.emit('error', 'Changement was failed', 'You are not the game host.')
+        socket.emit(
+          "error",
+          "Changement was failed",
+          "You are not the game host."
+        );
       }
-    })
+    });
 
-    socket.on('change_mountain', async (value) => {
+    socket.on("change_mountain", async (value) => {
       if (player.isRoomHost) {
-        console.log('Changing mountain to' + value)
-        global.gameConfig.mountain = value
-        io.local.emit('game_config_changed', global.gameConfig)
-        io.local.emit('room_message', player.trans(), `changed the mountain to ${value}.`)
+        console.log("Changing mountain to" + value);
+        global.gameConfig.mountain = value;
+        io.local.emit("game_config_changed", global.gameConfig);
+        io.local.emit(
+          "room_message",
+          player.trans(),
+          `changed the mountain to ${value}.`
+        );
       } else {
-        socket.emit('error', 'Changement was failed', 'You are not the game host.')
+        socket.emit(
+          "error",
+          "Changement was failed",
+          "You are not the game host."
+        );
       }
-    })
+    });
 
-    socket.on('change_city', async (value) => {
+    socket.on("change_city", async (value) => {
       if (player.isRoomHost) {
-        console.log('Changing city to' + value)
-        global.gameConfig.city = value
-        io.local.emit('game_config_changed', global.gameConfig)
-        io.local.emit('room_message', player.trans(), `changed the city to ${value}.`)
+        console.log("Changing city to" + value);
+        global.gameConfig.city = value;
+        io.local.emit("game_config_changed", global.gameConfig);
+        io.local.emit(
+          "room_message",
+          player.trans(),
+          `changed the city to ${value}.`
+        );
       } else {
-        socket.emit('error', 'Changement was failed', 'You are not the game host.')
+        socket.emit(
+          "error",
+          "Changement was failed",
+          "You are not the game host."
+        );
       }
-    })
+    });
 
-    socket.on('change_swamp', async (value) => {
+    socket.on("change_swamp", async (value) => {
       if (player.isRoomHost) {
-        console.log('Changing swamp to' + value)
-        global.gameConfig.swamp = value
-        io.local.emit('game_config_changed', global.gameConfig)
-        io.local.emit('room_message', player.trans(), `changed the swamp to ${value}.`)
+        console.log("Changing swamp to" + value);
+        global.gameConfig.swamp = value;
+        io.local.emit("game_config_changed", global.gameConfig);
+        io.local.emit(
+          "room_message",
+          player.trans(),
+          `changed the swamp to ${value}.`
+        );
       } else {
-        socket.emit('error', 'Changement was failed', 'You are not the game host.')
+        socket.emit(
+          "error",
+          "Changement was failed",
+          "You are not the game host."
+        );
       }
-    })
+    });
 
-    socket.on('change_max_player_num', async (value) => {
+    socket.on("change_max_player_num", async (value) => {
       if (player.isRoomHost) {
-        console.log('Changing max players to' + value)
-        global.gameConfig.maxPlayers = value
-        io.local.emit('game_config_changed', global.gameConfig)
-        io.local.emit('room_message', player.trans(), `changed the max player num to ${value}.`)
+        console.log("Changing max players to" + value);
+        global.gameConfig.maxPlayers = value;
+        io.local.emit("game_config_changed", global.gameConfig);
+        io.local.emit(
+          "room_message",
+          player.trans(),
+          `changed the max player num to ${value}.`
+        );
       } else {
-        socket.emit('error', 'Changement was failed', 'You are not the game host.')
+        socket.emit(
+          "error",
+          "Changement was failed",
+          "You are not the game host."
+        );
       }
-    })
+    });
 
-    socket.on('player_message', async (message) => {
-      io.local.emit('room_message', player.trans(), ': ' + message)
-    })
+    socket.on("player_message", async (message) => {
+      io.local.emit("room_message", player.trans(), ": " + message);
+    });
 
-    socket.on('disconnect', async () => {
-      if (!global.gameStarted)
-        await handleDisconnectInRoom(player, io)
-      else
-        await handleDisconnectInGame(player, io)
-    })
+    socket.on("disconnect", async () => {
+      if (!global.gameStarted) await handleDisconnectInRoom(player, io);
+      else await handleDisconnectInGame(player, io);
+    });
 
-    socket.on('leave_game', async () => {
-      socket.disconnect()
-      await handleDisconnectInGame(player, io)
-    })
+    socket.on("leave_game", async () => {
+      socket.disconnect();
+      await handleDisconnectInGame(player, io);
+    });
 
-    socket.on('force_start', async () => {
-      let playerIndex = await getPlayerIndex(player.id)
+    socket.on("force_start", async () => {
+      let playerIndex = await getPlayerIndex(player.id);
       if (global.players[playerIndex].forceStart === true) {
-        global.players[playerIndex].forceStart = false
-        --global.forceStartNum
+        global.players[playerIndex].forceStart = false;
+        --global.forceStartNum;
       } else {
-        global.players[playerIndex].forceStart = true
-        ++global.forceStartNum
+        global.players[playerIndex].forceStart = true;
+        ++global.forceStartNum;
       }
-      io.local.emit('players_changed', global.players.map(player => player.trans()))
-      io.local.emit('force_start_changed', global.forceStartNum)
+      io.local.emit(
+        "players_changed",
+        global.players.map((player) => player.trans())
+      );
+      io.local.emit("force_start_changed", global.forceStartNum);
 
       if (global.forceStartNum >= forceStartOK[global.players.length]) {
-        await handleGame(io)
+        await handleGame(io);
       }
-    })
+    });
   }
-})
+});
