@@ -26,9 +26,10 @@ const forceStartOK = [1, 2, 2, 3, 3, 4, 5, 5, 6];
 
 global.username = "";
 global.serverConfig = {
-  name: "Gennia Server",
-  port: 8080,
+  name: process.argv[2] || "GenniaServer",
+  port: process.argv[3] || 8080,
 };
+console.log(process.argv);
 global.serverRunning = false;
 global.gameStarted = false;
 global.map = undefined;
@@ -53,8 +54,9 @@ app.use(express.static(__dirname + "/src/frontend/"));
 server.listen(global.serverConfig.port, () => {
   global.serverRunning = true;
   console.log(
-    "Server established at",
-    "http://" + getIPAdress() + ":" + global.serverConfig.port
+    `Server "${
+      global.serverConfig.name
+    }" established at http://${getIPAdress()}:${global.serverConfig.port}`
   );
 });
 

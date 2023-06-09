@@ -4,7 +4,6 @@
  * Copyright (c) 2022 Reqwey Lin (https://github.com/Reqwey)
  *
  */
-const PORT = 8080;
 const forceStartOK = [1, 2, 2, 3, 3, 4, 5, 5, 6];
 //                    0  1  2  3  4  5  6  7  8
 function setTitle(title) {
@@ -103,7 +102,7 @@ function login() {
 	let tmp = localStorage.getItem('username');
   window.username = (tmp ? tmp : $("#usernameInput").val());
 	localStorage.setItem('username', window.username);
-  gameJoin(location.href.replace(location.port, PORT));
+  gameJoin(location.href);
 }
 function reJoinGame() {
   location.pathname = "/";
@@ -485,7 +484,7 @@ function gameJoin(url) {
         if (result.isConfirmed) {
           reJoinGame();
         } else {
-          window.location.href = "index.html";
+          window.location.pathname = "/";
         }
       });
     });
@@ -529,6 +528,9 @@ function gameJoin(url) {
       }
       $(".reqmessagesender").hide();
       $(".reqmessageboard").before(`
+      <div class="reqturnboard">
+        <a class="ui big violet inverted label" id="turner">Turn 0</a>
+      </div>
 			<div class="reqleaderboard">
 				<table class="ui inverted table unstackable">
 					<thead>
@@ -715,6 +717,7 @@ function gameJoin(url) {
       gameMap = JSON.parse(gameMap);
       if (turn % 2 === 0) ++window.gameTurn;
       setTitle(`Turn ${window.gameTurn} - Gennia`);
+      $('#turner').text(`Turn ${window.gameTurn}`);
       for (var i = 0; i < width; ++i) {
         for (var j = 0; j < height; ++j) {
           var $cell = $(`#td${i}-${j}`);

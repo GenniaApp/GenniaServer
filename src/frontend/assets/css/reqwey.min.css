@@ -79,13 +79,13 @@ html {
 	top: 0;
 	width: 100%;
 	height: 60px;
-	z-index: 1061;
+	z-index: 99;
 	background-color: transparent;
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
 	flex-direction: row;
-	background-color: rgb(89, 105, 117, 70%);
+	background-color: rgb(89, 105, 117, 40%);
 }
 
 .reqbottombar {
@@ -341,10 +341,18 @@ svg {
 	height: 500px;
 }
 
+.reqturnboard {
+	position: absolute;
+	left: 5px;
+	top: 64px;
+	z-index: 101;
+	min-width: 250px;
+}
+
 .reqleaderboard {
 	position: absolute;
 	right: 5px;
-	top: 5px;
+	top: 64px;
 	z-index: 101;
 	min-width: 250px;
 }
