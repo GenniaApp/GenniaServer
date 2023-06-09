@@ -102,7 +102,7 @@ function login() {
 	let tmp = localStorage.getItem('username');
   window.username = (tmp ? tmp : $("#usernameInput").val());
 	localStorage.setItem('username', window.username);
-  gameJoin(location.href);
+  gameJoin(location.host);
 }
 function reJoinGame() {
   location.pathname = "/";
@@ -160,7 +160,7 @@ function handleClick(i, j) {
 }
 function gameJoin(url) {
   window.url = url;
-  let socket = io(url.replace("http", "ws"), {
+  let socket = io("ws://" + url, {
     "connect timeout": 5000,
     "flash policy port": 10843,
   });
