@@ -265,7 +265,11 @@ io.on("connection", async (socket) => {
       socket.emit(
         "server_info",
         global.serverConfig.name,
-        `GenniaServer ${genniaserver.version}`
+        genniaserver.version,
+        global.gameStarted,
+        global.players.length,
+        global.forceStartNum,
+        global.gameConfig.maxPlayers
       );
     });
 
