@@ -1,6 +1,6 @@
 {
   "name": "gennia-server",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "Yet another portable generals.io server",
   "main": "main.js",
   "scripts": {

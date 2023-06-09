@@ -57,7 +57,7 @@ class Player {
   }
 
   beDominated() {
-    this.king.setType("City");
+    this.king.setType("c");
     this.land.forEach(block => {
       this.king.player.winLand(block);
     });
