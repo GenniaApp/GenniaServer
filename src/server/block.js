@@ -16,7 +16,7 @@ class Block {
   }
   
   kingBeDominated() {
-    this.type = 'City'
+    this.type = 'c'
   }
 
   beDominated(player, unit) {
@@ -26,7 +26,7 @@ class Block {
   }
 
   initKing(player) {
-    this.type = 'King';
+    this.type = 'k';
     this.unit = 1;
     this.player = player;
   }

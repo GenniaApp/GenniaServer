@@ -687,49 +687,49 @@ blockquote {
   cursor: pointer;
 }
 
-#game-map td.king,
-#game-map td.city,
-#game-map td.obstacle,
-#game-map td.plain,
-#game-map td.swamp {
+#game-map td.k,
+#game-map td.c,
+#game-map td.o,
+#game-map td.p,
+#game-map td.s {
   background-position: center;
   background-repeat: no-repeat;
 }
 
-#game-map td.king {
+#game-map td.k {
   background-image: url("../img/crown.png");
 }
 
-#game-map td.city {
+#game-map td.c {
   background-color: gray;
   background-image: url("../img/city.png");
 }
 
-#game-map td.neutral {
+#game-map td.p {
   background-color: gray;
 }
 
-#game-map td.mountain {
+#game-map td.m {
   background-image: url("../img/mountain.png");
   background-color: #bbbbbb;
 }
 
-#game-map td.obstacle {
+#game-map td.o {
   background-image: url("../img/obstacle.png");
   border: 1px solid transparent;
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-#game-map td.swamp {
+#game-map td.s {
   background-image: url("../img/swamp.png");
   background-color: gray;
 }
 
-#game-map td.fog {
+#game-map td.f {
   border: 1px solid transparent;
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-#game-map td.fog.selected {
+#game-map td.f.selected {
   border: 1px solid white;
 }

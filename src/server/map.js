@@ -51,8 +51,8 @@ class GameMap {
     return curPoint
   }
 
-  isObstacle(block) { return block.type === 'Mountain' || block.type === 'City' }
-  isPlain(block) { return block.type === 'Plain' }
+  isObstacle(block) { return block.type === 'm' || block.type === 'c' }
+  isPlain(block) { return block.type === 'p' }
   
   checkConnection(obstacleCount) {
     const conn = new Array(this.width * this.height).fill().map((_, i) => i);
@@ -103,7 +103,7 @@ class GameMap {
     console.log("Width:", this.width, "Height:", this.height)
     for (let i = 0; i < this.width; i++) {
       for (let j = 0; j < this.height; j++) {
-        this.map[i][j] = new Block(i, j, 'Plain')
+        this.map[i][j] = new Block(i, j, 'p')
       }
     }
     // Generate the king
@@ -114,7 +114,7 @@ class GameMap {
         let y = getRandomInt(0, this.height);
         pos = new Point(x, y);
         let block = this.getBlock(pos);
-        if (block.type !== "King") {
+        if (block.type !== "k") {
           let flag = true
           for (let j = 0; j < i; ++j)
             if (calcDistance(this.kings[j].king, new Point(x, y)) <= 6) {
@@ -139,12 +139,12 @@ class GameMap {
           y = getRandomInt(0, this.height);
           if (this.isPlain(this.map[x][y])) break;
         }
-        this.map[x][y].type = 'Mountain'
+        this.map[x][y].type = 'm'
         if (this.checkConnection(i)) {
           generated = true;
           break
         } else {
-          this.map[x][y].type = 'Plain'
+          this.map[x][y].type = 'p'
         }
       }
       if (!generated) { this.mountain = i - 1; console.log("Mountain Interrupted", i); break }
@@ -159,13 +159,13 @@ class GameMap {
           y = getRandomInt(0, this.height);
           if (this.isPlain(this.map[x][y])) break;
         }
-        this.map[x][y].type = 'City'
+        this.map[x][y].type = 'c'
         if (this.checkConnection(i + this.mountain)) {
           generated = true;
           this.map[x][y].unit = getRandomInt(35, 55)
           break
         } else {
-          this.map[x][y].type = 'Plain'
+          this.map[x][y].type = 'p'
         }
       }
       if (!generated) { this.city = i - 1; console.log("City Interrupted", i); break }
@@ -178,7 +178,7 @@ class GameMap {
         y = getRandomInt(0, this.height);
         if (this.isPlain(this.map[x][y])) break;
       }
-      this.map[x][y].type = 'Swamp'
+      this.map[x][y].type = 's'
     }
     console.log('Swamps generated successfully');
     let kings = this.kings
@@ -202,7 +202,7 @@ class GameMap {
   }
 
   // initMap(data) {
-  //   data = data || Array.from(Array(this.width), () => Array(this.height).fill("Plain"));
+  //   data = data || Array.from(Array(this.width), () => Array(this.height).fill("p"));
   //   for (let i = 0; i < this.width; i++) {
   //     for (let j = 0; j < this.height; j++) {
   //       this.map[i][j] = new Block(i, j, data[i][j])
@@ -235,19 +235,19 @@ class GameMap {
     for (let i = 0; i < this.width; i++) {
       for (let j = 0; j < this.height; j++) {
         switch (this.map[i][j].type) {
-          case "Plain":
+          case "p":
             if (this.map[i][j].player && this.turn % 50 === 0)
               ++this.map[i][j].unit;
             break;
-          case "King":
+          case "k":
             if (this.turn % 2 === 0)
               ++this.map[i][j].unit;
             break;
-          case "City":
+          case "c":
             if (this.map[i][j].player && this.turn % 2 === 0)
               ++this.map[i][j].unit;
             break;
-          case "Swamp":
+          case "s":
             if (this.map[i][j].player && this.turn % 2 === 0)
               --this.map[i][j].unit;
             if (this.map[i][j].unit === 0)
@@ -281,7 +281,7 @@ class GameMap {
   commandable(player, focus, newFocus) {
     var isOwner = this.ownBlock(player, focus);
     var possibleMove = this.withinMap(focus) && this.withinMap(newFocus);
-    var notMountain = this.getBlock(newFocus).type !== "Mountain";
+    var notMountain = this.getBlock(newFocus).type !== "m";
     return isOwner && possibleMove && notMountain
   }
 
@@ -324,10 +324,10 @@ class GameMap {
       for (let j = 0; j < this.height; j++) {
         var point = new Point(i, j);
         var block = this.getBlock(point);
-        if (block.type === 'Mountain' || block.type === 'City') {
-          viewPlayer[i][j] = { type: 'Obstacle', color: null, unit: null };
+        if (block.type === 'm' || block.type === 'c') {
+          viewPlayer[i][j] = { type: 'o', color: null, unit: null };
         } else {
-          viewPlayer[i][j] = { type: 'Fog', color: null, unit: null };
+          viewPlayer[i][j] = { type: 'f', color: null, unit: null };
         }
       }
     }
@@ -366,9 +366,9 @@ class GameMap {
   //     var x = getRandomInt(0, this.width);
   //     var y = getRandomInt(0, this.height);
   //     var block = this.getBlock(new Point(x, y));
-  //     if (block.type !== "King") {
+  //     if (block.type !== "k") {
   //       block.setUnit(1);
-  //       block.setType("King");
+  //       block.setType("k");
   //       return block
   //     }
   //   }
