@@ -526,6 +526,31 @@ function gameJoin(url) {
           );
         }
       }
+      let el=document.getElementById("reqAppContainer");
+        //在该对象上绑定鼠标点击事件
+        el.onmousedown = (e) => {
+            //鼠标按下，计算鼠标触点距离元素左侧的距离
+            let disX = e.clientX - el.offsetLeft;
+            let disY = e.clientY - el.offsetTop;
+            document.onmousemove = function (e) {
+              //计算需要移动的距离
+              let tx = e.clientX - disX;
+              let ty = e.clientY - disY;
+              //移动当前元素
+              if (tx >= 0 && tx <= window.innerWidth) {
+                el.style.left = tx + 'px';
+              } 
+              if (ty >= 0 && ty <= window.innerHeight) {
+                el.style.top = ty + 'px';
+              } 
+            };
+            //鼠标松开时，注销鼠标事件，停止元素拖拽。
+            document.onmouseup = function (e) {
+                document.onmousemove = null;
+                document.onmouseup = null;
+            };
+        }   
+
       $(".reqmessagesender").hide();
       $(".reqmessageboard").before(`
       <div class="reqturnboard">
