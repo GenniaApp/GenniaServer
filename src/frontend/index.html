@@ -117,12 +117,11 @@
 	<script src="./assets/js/socket.io.min.js"></script>
 	<script src="./renderer.js"></script>
 	<script>
-		if (localStorage.getItem("username")) login();
 		let url = new URL(location.href)
 		if (url.searchParams.has("username")) {
 			localStorage.setItem("username", url.searchParams.get("username"));
 			login();
-		}
+		} else if (localStorage.getItem("username")) login();
 	</script>
 </body>
 
