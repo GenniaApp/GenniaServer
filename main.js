@@ -515,6 +515,14 @@ io.on("connection", async (socket) => {
     socket.on("change_max_player_num", async (value) => {
       try {
         if (player.isRoomHost) {
+          if (value <= 1) {
+            socket.emit(
+              "error",
+              "Changement was failed",
+              "Max player num is invalid."
+            );
+            return;
+          }
           console.log("Changing max players to" + value);
           global.gameConfig.maxPlayers = value;
           io.local.emit("game_config_changed", global.gameConfig);

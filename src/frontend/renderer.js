@@ -377,7 +377,7 @@ function gameJoin(url) {
       },
     });
     $("#max_player_num").slider({
-      min: 1,
+      min: 2,
       max: 8,
       labelType: "number",
       step: 1,
@@ -506,7 +506,7 @@ function gameJoin(url) {
         if (result.isConfirmed) {
           reJoinGame();
         } else {
-          window.location.href = "index.html";
+          window.location.pathname = "/";
         }
       });
     });
