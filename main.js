@@ -231,7 +231,8 @@ async function handleGame(io) {
           if (playerIndex !== -1) {
             let view = await global.map.getViewPlayer(
               global.players[playerIndex]
-            );
+            )
+            view = view.map(row => row.map(item => [item.type, item.color, item.unit]));
             view = JSON.stringify(view);
             socket.emit(
               "game_update",
