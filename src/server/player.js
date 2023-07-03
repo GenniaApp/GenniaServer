@@ -1,6 +1,7 @@
 class Player {
-  constructor(id, socket_id, username, color) {
+  constructor(id, lobby_id, socket_id, username, color) {
     this.id = id;
+    this.lobby_id = lobby_id;
     this.socket_id = socket_id;
     this.username = username;
     this.color = color;
