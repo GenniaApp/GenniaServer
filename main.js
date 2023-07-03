@@ -185,8 +185,11 @@ async function handleGame(io, lobbyId) {
                   block.player.trans(),
                   player.trans()
                 );
-                io.sockets.sockets.get(player.socket_id)
-                  .emit("game_over", block.player.trans());
+                try {
+                  io.sockets.sockets
+                    .get(player.socket_id)
+                    .emit("game_over", block.player.trans());
+                } catch (_) {}
                 player.isDead = true;
                 lobbies[lobbyId].map.getBlock(player.king).kingBeDominated();
                 player.land.forEach((block) => {
