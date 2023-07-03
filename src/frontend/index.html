@@ -83,19 +83,19 @@
 		<div style="display: flex; align-items: center; justify-content: center;">
 			<img class="avatarImg" src="./assets/img/favicon-new.png" alt="Gennia" title="Gennia"
 				style="height: 40px; border-radius: 20%; display: inline;">
-			<span style="display: inline; font-size: 25px; margin: 5px;">Gennia Online</span>
+			<span style="display: inline; font-size: 25px; margin: 5px;">Gennia 在线版</span>
 			<span class="ui pink tag label" style="display: inline;">v1.0.14</span>
 		</div>
 		<div class="ui inverted basic menu" style="background-color: transparent; margin-right: 40px;">
 			<a class="item" href="https://gennia.reqwey.com">
-				Wiki <div class="ui pink label">zh-CN</div>
+				文档 <div class="ui pink label">zh-CN</div>
 			</a>
 			<a class="item" href="https://gennia.reqwey.com/bot-api/">
-				Bot API
+				搭建机器人
 			</a>
 			<a class="item" href="https://github.com/GenniaApp">
 				@GenniaApp
-				<div class="floating ui yellow label">JOIN US!</div>
+				<div class="floating ui yellow label">加入我们!</div>
 			</a>
 		</div>
 	</div>
@@ -103,16 +103,20 @@
 		<div class="fadeInDown avatar" style="text-align:center"><img class="avatarImg" src="./assets/img/favicon-new.png"
 				alt="Gennia" title="Gennia" style="max-height:150px; border-radius: 20%"></div>
 		<div class="fadeInUp ui segment" style="text-align:center;margin:-40px 0 0 0!important;padding-top:40px;z-index:-1">
-			<h1 style="font-size:2.4rem!important">Login to Gennia</h1>
+			<h1 style="font-size:2.4rem!important">登录 Gennia</h1>
 			<div class="ui form">
 				<div class="ui field">
-					<input type="text" name="username" id="usernameInput" onkeydown="keyLogin()" placeholder="Username">
+					<input type="text" name="username" id="usernameInput" onkeydown="keyLogin()" placeholder="输入昵称（不超过 15 个字符）">
 				</div>
 				<div class="ui field">
-					<div class="ui pink fluid submit button" id="submit" onclick="login()">Login</div>
+					<div class="ui pink fluid submit button" id="submit" onclick="login()">开始游戏</div>
 				</div>
 			</div>
 		</div>
+	</div>
+	<div class="reqfooter">
+		<span style="padding-right: 10px;">版权所有 © 2022~2023 Gennia 开源开发团队</span>
+		<a style="color: skyblue" href="https://beian.miit.gov.cn">粤ICP备2022122081号-2</a>
 	</div>
 	<script src="./assets/js/socket.io.min.js"></script>
 	<script src="./renderer.js"></script>

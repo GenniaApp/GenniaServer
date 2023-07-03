@@ -160,7 +160,7 @@ function handleClick(i, j) {
 }
 function gameJoin(url) {
   window.url = url;
-  let socket = io("wss://" + url, {
+  let socket = io("ws://" + url, {
     "connect timeout": 5000,
     "flash policy port": 10843,
   });
@@ -231,25 +231,24 @@ function gameJoin(url) {
     $("#reqAppContainer").html(`
 		<h1 id="serverName" class="fadeInDown"></h1>
 		<h4 class="fadeInDown" style="color: #818181!important">
-		Server version: <p class="req" id="serverVersion" style="display: inline"></p><br />
-		Share this url to your friends so that they can join
-			in:<code>${url}</code></h4>
+		服务器版本: <p class="req" id="serverVersion" style="display: inline"></p><br />
+		分享此链接加入游戏: <code>${url}</code></h4>
 
 		<div class="ui top attached block header title" style="color: #d12d9c;"><svg
 				style="display: inline-block;font-size: inherit;height: 1em;overflow: visible;vertical-align: -0.125em;font-size: 13px;margin-right:.75rem"
 				xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 				<path
 					d="M224 96.1v48.8l29.7 29.7c-6.8-34.8 3.5-70.3 28.5-95.3 20.3-20.3 47.2-31.2 75-31.2h1.2L301 105.3l15.1 90.6 90.6 15.1 57.3-57.3c.3 28.3-10.6 55.5-31.2 76.1-9.3 9.3-20.2 16.4-31.8 21.6 1.8 1.6 3.9 2.9 5.6 4.6l30.7 30.7c10.5-6.3 20.5-13.9 29.4-22.9 38.1-38.1 53.7-94.3 40.7-146.6C504.4 105 495 95.4 483 92c-12.2-3.4-25.2.1-34 9l-58.7 58.6-32.4-5.4-5.4-32.4 58.6-58.6c8.9-8.9 12.3-21.9 8.9-34-3.3-12.1-13-21.5-25.2-24.5-53.2-13.2-107.9 2-146.6 40.6C238 55.5 229.7 67 222.9 79.2l1.1.8v16.1zM106 454c-12.8 12.8-35.3 12.8-48.1 0-6.4-6.4-10-15-10-24 0-9.1 3.5-17.6 10-24l134.4-134.4-33.9-33.9L24 372C8.5 387.5 0 408.1 0 430s8.5 42.5 24 58 36.1 24 58 24 42.5-8.5 58-24l100.9-100.9c-9.7-15.8-15.2-33.8-15.7-52.1L106 454zm395.1-58.3L384 278.6c-23.1-23.1-57.6-27.6-85.4-13.9L192 158.1V96L64 0 0 64l96 128h62.1l106.6 106.6c-13.6 27.8-9.2 62.3 13.9 85.4l117.1 117.1c14.6 14.6 38.2 14.6 52.7 0l52.7-52.7c14.5-14.6 14.5-38.2 0-52.7z" />
-			</svg>Settings
+			</svg>游戏设置
 		</div>
 		<div class="ui bottom attached segment">
 			<div class="ui grid">
 				<div class="four wide column">
 					<div class="ui secondary vertical fluid inverted menu">
-						<div class="active item" data-tab="game-setting">Game</div>
-						<div class="item" data-tab="map-setting">Map</div>
-						<div class="item" data-tab="terrain-setting">Terrain</div>
-						<div class="item" data-tab="player-setting">Players</div>
+						<div class="active item" data-tab="game-setting">游戏</div>
+						<div class="item" data-tab="map-setting">地图</div>
+						<div class="item" data-tab="terrain-setting">地形</div>
+						<div class="item" data-tab="player-setting">玩家</div>
 					</div>
 				</div>
 				<div class="twelve wide stretched column">
@@ -257,7 +256,7 @@ function gameJoin(url) {
 						<!-- Tab Content !-->
 						<div class="ui inverted form">
 							<div class="ui segment field">
-								<label for="gameSpeed">Game Speed</label>
+								<label for="gameSpeed">游戏速度</label>
 								<div name="gameSpeed" id="gameSpeed" class="ui bottom aligned pink labeled slider"></div>
 							</div>
 						</div>
@@ -266,11 +265,11 @@ function gameJoin(url) {
 						<!-- Tab Content !-->
 						<div class="ui inverted form">
 							<div class="ui segment field">
-								<label for="map_width">Width: <p style="display: inline" id="map_widthVal"></p></label>
+								<label for="map_width">地图宽度: <p style="display: inline" id="map_widthVal"></p></label>
 								<div name="map_width" id="map_width" class="ui bottom aligned pink labeled slider"></div>
 							</div>
 							<div class="ui segment field">
-								<label for="map_height">Height: <p style="display: inline" id="map_heightVal"></p></label>
+								<label for="map_height">地图高度: <p style="display: inline" id="map_heightVal"></p></label>
 								<div name="map_height" id="map_height" class="ui bottom aligned pink labeled slider"></div>
 							</div>
 						</div>
@@ -279,15 +278,15 @@ function gameJoin(url) {
 						<!-- Tab Content !-->
 						<div class="ui inverted form">
 							<div class="ui segment field">
-								<label for="mountain">Mountain: <p style="display: inline" id="mountainVal"></p></label>
+								<label for="mountain">山峦数: <p style="display: inline" id="mountainVal"></p></label>
 								<div name="mountain" id="mountain" class="ui bottom aligned pink labeled slider"></div>
 							</div>
 							<div class="ui segment field">
-								<label for="city">City: <p style="display: inline" id="cityVal"></p></label>
+								<label for="city">城堡数: <p style="display: inline" id="cityVal"></p></label>
 								<div name="city" id="city" class="ui bottom aligned pink labeled slider"></div>
 							</div>
 							<div class="ui segment field">
-								<label for="swamp">Swamp: <p style="display: inline" id="swampVal"></p></label>
+								<label for="swamp">沼泽数: <p style="display: inline" id="swampVal"></p></label>
 								<div name="swamp" id="swamp" class="ui bottom aligned pink labeled slider"></div>
 							</div>
 						</div>
@@ -296,7 +295,7 @@ function gameJoin(url) {
 						<!-- Tab Content !-->
 						<div class="ui inverted form">
 							<div class="ui segment field">
-								<label for="max_player_num">Max player num: <p style="display: inline" id="max_player_numVal"></p></label>
+								<label for="max_player_num">最大玩家数目: <p style="display: inline" id="max_player_numVal"></p></label>
 								<div name="max_player_num" id="max_player_num" class="ui bottom aligned pink labeled slider"></div>
 							</div>
 						</div>
@@ -309,13 +308,13 @@ function gameJoin(url) {
 				xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512">
 				<path
 					d="M544 224c44.2 0 80-35.8 80-80s-35.8-80-80-80-80 35.8-80 80 35.8 80 80 80zm0-112c17.6 0 32 14.4 32 32s-14.4 32-32 32-32-14.4-32-32 14.4-32 32-32zM96 224c44.2 0 80-35.8 80-80s-35.8-80-80-80-80 35.8-80 80 35.8 80 80 80zm0-112c17.6 0 32 14.4 32 32s-14.4 32-32 32-32-14.4-32-32 14.4-32 32-32zm396.4 210.9c-27.5-40.8-80.7-56-127.8-41.7-14.2 4.3-29.1 6.7-44.7 6.7s-30.5-2.4-44.7-6.7c-47.1-14.3-100.3.8-127.8 41.7-12.4 18.4-19.6 40.5-19.6 64.3V432c0 26.5 21.5 48 48 48h288c26.5 0 48-21.5 48-48v-44.8c.2-23.8-7-45.9-19.4-64.3zM464 432H176v-44.8c0-36.4 29.2-66.2 65.4-67.2 25.5 10.6 51.9 16 78.6 16 26.7 0 53.1-5.4 78.6-16 36.2 1 65.4 30.7 65.4 67.2V432zm92-176h-24c-17.3 0-33.4 5.3-46.8 14.3 13.4 10.1 25.2 22.2 34.4 36.2 3.9-1.4 8-2.5 12.3-2.5h24c19.8 0 36 16.2 36 36 0 13.2 10.8 24 24 24s24-10.8 24-24c.1-46.3-37.6-84-83.9-84zm-236 0c61.9 0 112-50.1 112-112S381.9 32 320 32 208 82.1 208 144s50.1 112 112 112zm0-176c35.3 0 64 28.7 64 64s-28.7 64-64 64-64-28.7-64-64 28.7-64 64-64zM154.8 270.3c-13.4-9-29.5-14.3-46.8-14.3H84c-46.3 0-84 37.7-84 84 0 13.2 10.8 24 24 24s24-10.8 24-24c0-19.8 16.2-36 36-36h24c4.4 0 8.5 1.1 12.3 2.5 9.3-14 21.1-26.1 34.5-36.2z" />
-			</svg>Players
+			</svg>玩家
 		</div>
 		<div class="ui bottom attached segment">
 			<div class="ui horizontal list" id="playerTable">
 			</div>
 		</div>
-		<button class="ui fluid black huge submit button reqforcestartemitor" id="emitForceStart">Force Start(<p style="display: inline" id="forceStartNum">0</p>/<p style="display: inline" id="totalNum">0</p>)</button>`);
+		<button class="ui fluid black huge submit button reqforcestartemitor" id="emitForceStart">提前开始(<p style="display: inline" id="forceStartNum">0</p>/<p style="display: inline" id="totalNum">0</p>)</button>`);
     $("#reqAppContainer").after(`<div class="reqmessageboard">
 	<div class="ui segment" id="messageContent">
 		<div class="header req"><svg
@@ -323,7 +322,7 @@ function gameJoin(url) {
 				xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
 				<path
 					d="M512 160h-96V64c0-35.3-28.7-64-64-64H64C28.7 0 0 28.7 0 64v160c0 35.3 28.7 64 64 64h32v52c0 7.1 5.8 12 12 12 2.4 0 4.9-.7 7.1-2.4l76.9-43.5V384c0 35.3 28.7 64 64 64h96l108.9 61.6c2.2 1.6 4.7 2.4 7.1 2.4 6.2 0 12-4.9 12-12v-52h32c35.3 0 64-28.7 64-64V224c0-35.3-28.7-64-64-64zM96 240H64c-8.8 0-16-7.2-16-16V64c0-8.8 7.2-16 16-16h288c8.8 0 16 7.2 16 16v160c0 8.8-7.2 16-16 16H211.4l-11 6.2-56.4 31.9V240H96zm432 144c0 8.8-7.2 16-16 16h-80v38.1l-56.4-31.9-11-6.2H256c-8.8 0-16-7.2-16-16v-96h112c35.3 0 64-28.7 64-64v-16h96c8.8 0 16 7.2 16 16v160z" />
-			</svg>Message Center</div>
+			</svg>消息中心</div>
 		<div style="margin-top: 10px"></div>
 	</div>
 	<input class="reqmessagesender" type="text" id="messageSender" name="messageSender"
@@ -471,14 +470,14 @@ function gameJoin(url) {
       window.leaved_game = true;
       socket.emit("leave_game");
       Swal.fire({
-        title: "Game Over!",
-        html: `<p style="display: inline">You were defeated by </p><p style="display: inline" class="reqplayer color${player.color}">${player.username}</p>`,
+        title: "您输了!",
+        html: `<p style="display: inline">您被</p><p style="display: inline" class="reqplayer color${player.color}">${player.username}</p><p style="display: inline">击败了</p>`,
         icon: "warning",
         showDenyButton: true,
         showCancelButton: false,
         allowOutsideClick: false,
-        confirmButtonText: "Replay",
-        denyButtonText: `Quit`,
+        confirmButtonText: "重玩",
+        denyButtonText: `退出`,
       }).then((result) => {
         /* Read more about isConfirmed, isDenied below */
         if (result.isConfirmed) {
@@ -494,13 +493,13 @@ function gameJoin(url) {
       window.leaved_game = true;
       socket.emit("leave_game");
       Swal.fire({
-        title: winner_id === window.playerId ? "You won!" : "Game Ended.",
+        title: winner_id === window.playerId ? "您赢了!" : "游戏结束。",
         icon: winner_id === window.playerId ? "success" : "info",
         showDenyButton: true,
         showCancelButton: false,
         allowOutsideClick: false,
-        confirmButtonText: "Replay",
-        denyButtonText: `Quit`,
+        confirmButtonText: "重玩",
+        denyButtonText: `退出`,
       }).then((result) => {
         /* Read more about isConfirmed, isDenied below */
         if (result.isConfirmed) {
@@ -554,15 +553,15 @@ function gameJoin(url) {
       $(".reqmessagesender").hide();
       $(".reqmessageboard").before(`
       <div class="reqturnboard">
-        <a class="ui big violet inverted label" id="turner">Turn 0</a>
+        <a class="ui big violet inverted label" id="turner">回合数 0</a>
       </div>
 			<div class="reqleaderboard">
 				<table class="ui inverted table unstackable">
 					<thead>
 						<tr>
-							<th>Player</th>
-							<th>Army</th>
-							<th>Land</th>
+							<th>玩家</th>
+							<th>兵力</th>
+							<th>版图</th>
 						</tr>
 					</thead>
 					<tbody id="reqLeaderBoardContent"></tbody>
