@@ -147,21 +147,26 @@ async function handleGame(io, lobbyId) {
         let player = lobbies[lobbyId].players[playerIndex];
 
         socket.on("attack", async (from, to, isHalf) => {
-          if (
-            player.operatedTurn < lobbies[lobbyId].map.turn &&
-            lobbies[lobbyId].map.commandable(player, from, to)
-          ) {
-            if (isHalf) {
-              lobbies[lobbyId].map.moveHalfMovableUnit(player, from, to);
-            } else {
-              lobbies[lobbyId].map.moveAllMovableUnit(player, from, to);
-            }
+          try {
 
-            lobbies[lobbyId].players[playerIndex].operatedTurn =
-              lobbies[lobbyId].map.turn;
-            socket.emit("attack_success", from, to);
-          } else {
-            socket.emit("attack_failure", from, to);
+            if (
+              player.operatedTurn < lobbies[lobbyId].map.turn &&
+              lobbies[lobbyId].map.commandable(player, from, to)
+            ) {
+              if (isHalf) {
+                lobbies[lobbyId].map.moveHalfMovableUnit(player, from, to);
+              } else {
+                lobbies[lobbyId].map.moveAllMovableUnit(player, from, to);
+              }
+  
+              lobbies[lobbyId].players[playerIndex].operatedTurn =
+                lobbies[lobbyId].map.turn;
+              socket.emit("attack_success", from, to);
+            } else {
+              socket.emit("attack_failure", from, to);
+            }
+          } catch (e) {
+            console.log(e);
           }
         });
       }
