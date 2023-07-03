@@ -28,8 +28,8 @@ function getRandomInt(min, max) {
 
 class GameMap {
   constructor(width, height, mountain, city, swamp, kings) {
-    this.width = parseInt(kings.length * 5 + 6 * width);
-    this.height = parseInt(kings.length * 5 + 6 * height);
+    this.width = parseInt(5 * Math.sqrt(kings.length) + 6 * width);
+    this.height = parseInt(5 * Math.sqrt(kings.length) + 6 * height);
     if (mountain + city === 0) {
       this.mountain = this.city = 0
     } else {

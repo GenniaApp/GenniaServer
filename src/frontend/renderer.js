@@ -514,7 +514,7 @@ function gameJoin(url) {
     socket.on("init_game_map", (width, height) => {
       (window.mapWidth = width), (window.mapHeight = height);
       $("#reqAppContainer").html(
-        `<div class="ui segment"><table id="game-map"></table></div>`
+        `<div class="ui segment" style="display: flex; justify-content: center; align-items: center"><table id="game-map"></table></div>`
       );
       var $gameTable = $("#game-map");
       for (var i = 0; i < width; ++i) {
