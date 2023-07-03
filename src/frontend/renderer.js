@@ -160,7 +160,7 @@ function handleClick(i, j) {
 }
 function gameJoin(url) {
   window.url = url;
-  let socket = io("ws://" + url, {
+  let socket = io("wss://" + url, {
     "connect timeout": 5000,
     "flash policy port": 10843,
   });
