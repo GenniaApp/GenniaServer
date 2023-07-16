@@ -1,3 +1,6 @@
+> **Warning**
+> This project had been updated to [GenniaServer2](https://github.com/GenniaApp/GenniaServer2), current repository was discontinued.
+
 # GenniaServer
 Gennia Server-side for every OS
 
